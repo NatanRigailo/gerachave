@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Pergunte ao usuário pelo nome da chave se não for fornecido como argumento
+if [ -z "$1" ]
+then
+  read -p "Por favor, digite o nome da chave: " keyname
+else
+  keyname=$1
+fi
+
+# Obtenha a data atual no formato YYYY-MM-DD
+date=$(date +%Y-%m-%d)
+
+# Verifique se os programas necessários estão disponíveis
+if ! command -v ssh-keygen &> /dev/null
+then
+    echo "ssh-keygen não pôde ser encontrado"
+    exit
+fi
+
+if ! command -v puttygen &> /dev/null
+then
+    echo "puttygen não pôde ser encontrado"
+    exit
+fi
+
+# Gere a chave privada e a chave pública com um comentário personalizado
+ssh-keygen -t rsa -b 2048 -f $keyname.pem -m PEM -C "$keyname-$date"
+
+# Renomeie a chave pública
+mv $keyname.pem.pub $keyname.pub
+
+# Gere a chave privada no formato .ppk para uso com o PuTTY
+puttygen $keyname.pem -o $keyname.ppk
+
+# Ajuste as permissões
+chmod 600 $keyname.pem
+chmod 600 $keyname.ppk
+
+echo "Chaves geradas com sucesso: $keyname.pem, $keyname.pub e $keyname.ppk"
+
